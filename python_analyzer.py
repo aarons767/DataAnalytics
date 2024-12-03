@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from datetime import datetime
 import unittest
+import seaborn as sns
 
 input_file = 'no_missing.csv'
 output_file = 'normalized.csv'
@@ -77,3 +78,27 @@ if not outliers.empty:
     print(outliers)
 else:
     print("No outliers found (no killings or injuries above 50).")
+
+
+plt.figure(figsize=(8, 6))
+correlation_matrix = normalized_data[['injured', 'killed']].corr()
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Heatmap between Injured and Killed')
+plt.show()
+
+
+#line graph with #injured and killed overlay. Close the first graph window to reveal this...
+normalized_data['incident_date'] = pd.to_datetime(normalized_data['incident_date'])
+normalized_data['year'] = normalized_data['incident_date'].dt.year
+yearly_data = normalized_data.groupby('year')[['killed', 'injured']].sum().reset_index()
+
+# Plot the line graph
+plt.figure(figsize=(10, 6))
+plt.plot(yearly_data['year'], yearly_data['killed'], label='Killed', marker='o')
+plt.plot(yearly_data['year'], yearly_data['injured'], label='Injured', marker='o', color='red')
+plt.title('Yearly Trends of Killed and Injured')
+plt.xlabel('Year')
+plt.ylabel('Count')
+plt.legend()
+plt.grid(True)
+plt.show()

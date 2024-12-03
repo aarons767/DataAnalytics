@@ -14,6 +14,9 @@ class TestDataProcessing(unittest.TestCase):
             'killed': ['1', '2', 'invalid'],
             'injured': ['3', 'invalid', '5']
         })
+        
+        #make sure normalized.csv exists first, run python_analyzer.py to generate
+        self.csv_file = './normalized.csv'
 
     def test_convert_date(self):
         # Test the date conversion function
@@ -27,17 +30,29 @@ class TestDataProcessing(unittest.TestCase):
         expected_dates = ['01-01-2020', '02-15-2020', '03-10-2020']
         self.assertListEqual(self.data['incident_date'].tolist(), expected_dates)
 
-    def test_numeric_conversion(self):
-        # Test conversion of 'killed' and 'injured' columns to numeric
-        self.data['killed'] = pd.to_numeric(self.data['killed'], errors='coerce').fillna(0)
-        self.data['injured'] = pd.to_numeric(self.data['injured'], errors='coerce').fillna(0)
+    def test_negative_values_exist_in_csv(self):
+        # Load the CSV file into a DataFrame
+        df = pd.read_csv(self.csv_file)
 
-        expected_killed = [1.0, 2.0, 0.0]
-        expected_injured = [3.0, 0.0, 5.0]
+        # Ensure the columns of interest exist
+        self.assertIn('killed', df.columns, "Column 'killed' not found in file")
+        self.assertIn('injured', df.columns, "Column 'injured' not found in file")
 
-        self.assertListEqual(self.data['killed'].tolist(), expected_killed)
-        self.assertListEqual(self.data['injured'].tolist(), expected_injured)
+        # Convert columns to numeric, coercing errors to NaN
+        df['killed'] = pd.to_numeric(df['killed'], errors='coerce').fillna(0)
+        df['injured'] = pd.to_numeric(df['injured'], errors='coerce').fillna(0)
 
+        # Check for any negative values
+        has_negative_killed = (df['killed'] < 0).any()
+        has_negative_injured = (df['injured'] < 0).any()
+
+        # Assert that no negative values exist
+        self.assertFalse(
+            has_negative_killed or has_negative_injured,
+            "Negative values found in 'killed' or 'injured' columns"
+        )
+        
+        
     def test_filter_outliers(self):
         # Test filtering out rows where 'killed' or 'injured' > 50
         self.data['killed'] = pd.to_numeric(self.data['killed'], errors='coerce').fillna(0)
@@ -47,7 +62,7 @@ class TestDataProcessing(unittest.TestCase):
 
         # Since no values are > 50, same as the original
         self.assertEqual(len(filtered_data), len(self.data))
-
+        
     def test_statistics(self):
         self.data['killed'] = pd.to_numeric(self.data['killed'], errors='coerce').fillna(0)
         self.data['injured'] = pd.to_numeric(self.data['injured'], errors='coerce').fillna(0)
