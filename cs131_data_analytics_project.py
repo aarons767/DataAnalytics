@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-clean_gun_data = pd.read_csv('cleaned_file.csv')
+clean_gun_data = pd.read_csv('cleaned.csv')
 no_missing_gun = pd.read_csv('no_missing.csv')
 
 """#Data Preprocessing"""
